@@ -9,7 +9,7 @@ db = open("../pgn_databases/test.pgn", "r")
 
 print(db.read(10000).split("\n\n")[1::2])
 
-
+rank_dict = {"a": 7, "b": 6, "c": 5, "d": 4, "e": 3, "f": 2, "g": 1, "h": 0}
 
 ### Board-related
 
@@ -66,9 +66,6 @@ def parse_move(move):
         return -1
     else:
         ambig = None
-     
-    
-    rank_dict = {"a": 7, "b": 6, "c": 5, "d": 4, "e": 3, "f": 2, "g": 1, "h": 0}
     
     r, f = rank_dict[move[0]], int(move[1])-1
     
@@ -83,6 +80,7 @@ def move_simple(to, player)
     board[:, :, d] = np.multiply(board[:, :, d],
                                  np.array([board[:, :, d] != player]))
     board[r, f, d] = player
+    
     
 def move_KQ(to, player):
     move_simple(to, player=player)
@@ -109,7 +107,6 @@ def move_R(to, player):
                                          np.array([board[:, a, d] != player]))
             
         except ValueError:
-            rank_dict = {"a": 7, "b": 6, "c": 5, "d": 4, "e": 3, "f": 2, "g": 1, "h": 0}
             a = rank_dict(ambig)
             board[a, :, d] = np.multiply(board[a, :, d],
                                          np.array([board[a, :, d] != player]))
@@ -120,9 +117,34 @@ def move_R(to, player):
 def move_N(to, player):
     pass
     
-    
+# WIP    
 def move_B(to, player):
-    pass
+    r, f, d, ambig = to
+   
+    if np.array([board[:, :, d] == player]).sum() == 1:
+        return move_simple(to, player)
+        
+    elif np.array(list(range(0, r), f, d] == player]).sum() == 1:
+        board[:, f, d] = np.multiply(board[:, f, d],
+                                     np.array([board[:, f, d] != player]))
+        
+    elif np.array([board[r, :, d] == player]).sum() == 1:
+        board[r, :, d] = np.multiply(board[r, :, d],
+                                     np.array([board[r, :, d] != player]))
+                
+    else:
+        try:
+            a = int(ambig)-1
+            board[:, a, d] = np.multiply(board[:, a, d],
+                                         np.array([board[:, a, d] != player]))
+            
+        except ValueError:
+            rank_dict = {"a": 7, "b": 6, "c": 5, "d": 4, "e": 3, "f": 2, "g": 1, "h": 0}
+            a = rank_dict(ambig)
+            board[a, :, d] = np.multiply(board[a, :, d],
+                                         np.array([board[a, :, d] != player]))
+        
+    board[r, f, d] = player
     
     
 def move_P(to, player):

@@ -12,7 +12,7 @@ piece_dict = {"P": 0, "R": 1, "N": 2, "B": 3, "Q": 4, "K": 5}
 
 # Board-related
 def init_board():
-    board = np.zeros((8, 8, 6))
+    board = np.zeros((8, 8, 6), dtype=np.int8)
     
     # Pawns
     board[1, :, 0] = -1
@@ -57,5 +57,6 @@ def parse_move(move):
     
 
 def move_KQ(to, player=1):
-    board[:, :, 5][board[:, :, 5] == player] = 0
+    board[:, :, 5] = np.multiply(board[:, :, 5],
+                                 np.array([board[:, :, 5] != player]))
     board[to] = player

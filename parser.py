@@ -1,16 +1,18 @@
-import re, string
+import re
 import numpy as np
 
-db = open("../pgn_databases/test.pgn", "r")
 
+
+### Data-related
+
+db = open("../pgn_databases/test.pgn", "r")
 
 print(db.read(10000).split("\n\n")[1::2])
 
 
 
-piece_dict = {"P": 0, "R": 1, "N": 2, "B": 3, "Q": 4, "K": 5}
+### Board-related
 
-# Board-related
 def init_board():
     board = np.zeros((8, 8, 6), dtype=np.int8)
     
@@ -33,6 +35,13 @@ def init_board():
     
     return board
 
+    
+def unroll(board):
+    return board.ravel()
+
+    
+    
+### Move-related
 
 def parse_move(move):
     
@@ -55,8 +64,47 @@ def parse_move(move):
     return [r, f, d]
 
     
+def move_simple(to, player)
+    """
+    Wipes old position and adds new position of the single piece in a layer
+    """
+    r, f, d = to
+    board[:, :, d] = np.multiply(board[:, :, d],
+                                 np.array([board[:, :, d] != player]))
+    board[r, f, d] = player
+    
+def move_KQ(to, player):
+    move_simple(to, player=player)
+    
 
-def move_KQ(to, player=1):
-    board[:, :, 5] = np.multiply(board[:, :, 5],
-                                 np.array([board[:, :, 5] != player]))
-    board[to] = player
+def move_R(to, player):
+    r, f, d = to
+   
+    if ([board[:, :, d] == player].sum() == 1):
+        move_simple(to, player)
+        
+    elif ([board[:, f, d] == player].sum() == 1):
+        board[:, f, d] = np.multiply(board[:, f, d],
+                                     np.array([board[:, f, d] != player]))
+        board[r, f, d] = player
+        
+    elif ([board[r, :, d] == player].sum() == 1):
+        board[r, :, d] = np.multiply(board[r, :, d],
+                                     np.array([board[r, :, d] != player]))
+        board[r, f, d] = player
+                
+    else:
+        return -1
+        
+        
+    
+def move_N(to, player):
+    pass
+    
+    
+def move_B(to, player):
+    pass
+    
+    
+def move_P(to, player):
+    pass

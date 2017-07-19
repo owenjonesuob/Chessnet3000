@@ -149,7 +149,7 @@ def move_R(to, player):
                                          np.array([board[:, a, d] != player]))
             
         except ValueError:
-            a = rank_dict(ambig)
+            a = rank_dict[ambig]
             board[a, :, d] = np.multiply(board[a, :, d],
                                          np.array([board[a, :, d] != player]))
         
@@ -158,7 +158,45 @@ def move_R(to, player):
     
     
 def move_N(to, player):
-    pass
+    r, f, d, ambig = to
+    
+    # If there's only one piece of that type
+    if np.array([board[:, :, d] == player]).sum() == 1:
+        return move_simple(to, player)
+    
+    # Check to see if it's the only one in potential origin squares
+    origins = [[2, 1], [2, -1], [1, 2], [1, -2],
+               [-1, 2], [-1, -2], [-2, 1], [-2, -1]]
+    
+    count = 0
+    
+    for og in origins:
+        r_, f_ = np.add([r, f], og)
+        if 0 <= r_ <= 7 and 0 <= f_ <= 7:
+            if board[r_, f_, d] == player:
+                count += 1
+                
+    if count == 1:
+        for og in origins:
+            r_, f_ = np.add([r, f], og)
+            if 0 <= r_ <= 7 and 0 <= f_ <= 7:
+                if board[r_, f_, d] == player:
+                    board[r_, f_, d] = 0
+                    
+    # Use the disambiguator            
+    else:
+        try:
+            a = int(ambig)-1
+            board[:, a, d] = np.multiply(board[:, a, d],
+                                         np.array([board[:, a, d] != player]))
+            
+        except ValueError:
+            a = rank_dict[ambig]
+            board[a, :, d] = np.multiply(board[a, :, d],
+                                         np.array([board[a, :, d] != player]))
+    
+    board[r, f, d] = player
+        
     
 
     

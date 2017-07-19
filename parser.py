@@ -79,6 +79,18 @@ def find_diags(to):
     
     diags = set()
     
+    # Down-left    
+    r_, f_ = r, f
+    while r_ >= 0 and f_ <= 7:
+        diags.add((r_, f_))
+        r_ -= 1
+        f_ += 1
+    # Up-right
+    r_, f_ = r, f
+    while f_ >= 0 and r_ <= 7:
+        diags.add((r_, f_))
+        r_ += 1
+        f_ -= 1    
     # Down-right
     r_, f_ = r, f
     while max(r_, f_) <= 7:
@@ -91,20 +103,8 @@ def find_diags(to):
         diags.add((r_, f_))
         r_ -= 1
         f_ -= 1  
-    # Down-left    
-    r_, f_ = r, f
-    while r_ >= 0 and f_ <= 7:
-        diags.add((r_, f_))
-        r_ -= 1
-        f_ += 1
-    # Up-right
-    r_, f_ = r, f
-    while f_ >= 0 and r_ <= 7:
-        diags.add((r_, f_))
-        r_ += 1
-        f_ -= 1
         
-    return diags
+    return list(diags)
     
     
     
@@ -126,18 +126,22 @@ def move_KQ(to, player):
     
 def move_R(to, player):
     r, f, d, ambig = to
-   
+    
+    # If there's only one piece of that type
     if np.array([board[:, :, d] == player]).sum() == 1:
         return move_simple(to, player)
-        
+    
+    # Check to see if it's the only piece of its type on the rank
     elif np.array([board[:, f, d] == player]).sum() == 1:
         board[:, f, d] = np.multiply(board[:, f, d],
                                      np.array([board[:, f, d] != player]))
-        
+    
+    # Check to see if it's the only piece of its type on the file    
     elif np.array([board[r, :, d] == player]).sum() == 1:
         board[r, :, d] = np.multiply(board[r, :, d],
                                      np.array([board[r, :, d] != player]))
-                
+                                     
+    # Use the disambiguator            
     else:
         try:
             a = int(ambig)-1
@@ -150,39 +154,31 @@ def move_R(to, player):
                                          np.array([board[a, :, d] != player]))
         
     board[r, f, d] = player
-        
+
+    
     
 def move_N(to, player):
     pass
     
-# WIP    
+
+    
 def move_B(to, player):
     r, f, d, ambig = to
    
+    # If there's only one piece of that type
     if np.array([board[:, :, d] == player]).sum() == 1:
         return move_simple(to, player)
-        
-    elif np.array(list(range(0, r), f, d] == player]).sum() == 1:
-        board[:, f, d] = np.multiply(board[:, f, d],
-                                     np.array([board[:, f, d] != player]))
-        
-    elif np.array([board[r, :, d] == player]).sum() == 1:
-        board[r, :, d] = np.multiply(board[r, :, d],
-                                     np.array([board[r, :, d] != player]))
-                
+    
+    # Only one bishop on each square colour; so just wipe both diagonals        
     else:
-        try:
-            a = int(ambig)-1
-            board[:, a, d] = np.multiply(board[:, a, d],
-                                         np.array([board[:, a, d] != player]))
-            
-        except ValueError:
-            rank_dict = {"a": 7, "b": 6, "c": 5, "d": 4, "e": 3, "f": 2, "g": 1, "h": 0}
-            a = rank_dict(ambig)
-            board[a, :, d] = np.multiply(board[a, :, d],
-                                         np.array([board[a, :, d] != player]))
+        diags = find_diags(to)
+        for square in diags:
+            r_, f_ = square
+            if board[r_, f_, 3] == player:
+                board[r_, f_, 3] = 0
         
     board[r, f, d] = player
+    
     
     
 def move_P(to, player):

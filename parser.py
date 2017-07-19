@@ -18,7 +18,7 @@ def init_board():
     
     # Pawns
     board[1, :, 0] = -1
-    board[6, :, 0] = -1
+    board[6, :, 0] = 1
     
     # Non-royalty
     for j in range(3):

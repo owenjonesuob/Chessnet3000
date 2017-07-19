@@ -1,4 +1,4 @@
-import re
+import re, itertools
 import numpy as np
 
 
@@ -72,7 +72,43 @@ def parse_move(move):
     return [r, f, d, ambig]
 
     
-def move_simple(to, player)
+    
+def find_diags(to):
+    """ Finds squares on both diagonals that target square lies on """
+    r, f, d, ambig = to
+    
+    diags = set()
+    
+    # Down-right
+    r_, f_ = r, f
+    while max(r_, f_) <= 7:
+        diags.add((r_, f_))
+        r_ += 1
+        f_ += 1
+    # Up-left
+    r_, f_ = r, f
+    while min(r_, f_) >= 0:
+        diags.add((r_, f_))
+        r_ -= 1
+        f_ -= 1  
+    # Down-left    
+    r_, f_ = r, f
+    while r_ >= 0 and f_ <= 7:
+        diags.add((r_, f_))
+        r_ -= 1
+        f_ += 1
+    # Up-right
+    r_, f_ = r, f
+    while f_ >= 0 and r_ <= 7:
+        diags.add((r_, f_))
+        r_ += 1
+        f_ -= 1
+        
+    return diags
+    
+    
+    
+def move_simple(to, player):
     """
     Wipes old position and adds new position of the single piece in a layer
     """
@@ -82,10 +118,12 @@ def move_simple(to, player)
     board[r, f, d] = player
     
     
+    
 def move_KQ(to, player):
     move_simple(to, player=player)
     
 
+    
 def move_R(to, player):
     r, f, d, ambig = to
    

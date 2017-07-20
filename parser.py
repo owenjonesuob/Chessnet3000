@@ -7,7 +7,7 @@ import numpy as np
 
 db = open("../pgn_databases/test.pgn", "r")
 
-print(db.read(10000).split("\n\n")[1::2])
+#print(db.read(10000).split("\n\n")[1::2])
 
 f_dict = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
 
@@ -144,13 +144,15 @@ def find_diags(to):
     
     
     
-def move_simple(to, player, board = board):
+def move_simple(to, player, board):
     """
     Wipes old position and adds new position of the single piece in a layer
     """
     r, f, d, ambig = to
     board[:, :, d] = np.multiply(board[:, :, d],
                                  np.array([board[:, :, d] != player]))
+    
+    board[r, f, :] = 0
     board[r, f, d] = player
     
     
@@ -165,7 +167,7 @@ def move_R(to, player, board):
     
     # If there's only one piece of that type
     if np.array([board[:, :, d] == player]).sum() == 1:
-        return move_simple(to, player)
+        return move_simple(to, player, board)
     
     # Check to see if it's the only piece of its type on the file
     elif np.array([board[:, f, d] == player]).sum() == 1:
@@ -179,16 +181,40 @@ def move_R(to, player, board):
                                      
     # Use the disambiguator            
     else:
-        try:
-            a = int(ambig)-1
-            board[:, a, d] = np.multiply(board[:, a, d],
-                                         np.array([board[:, a, d] != player]))
-            
-        except ValueError:
-            a = f_dict[ambig]
-            board[a, :, d] = np.multiply(board[a, :, d],
-                                         np.array([board[a, :, d] != player]))
         
+        if ambig is None:
+            print("AH!")
+            locations = np.where(board[:, :, d] == player)
+            for i in range(0, 2):
+                r_, f_ = locations[i][0], locations[i][1]
+                
+                if r_ == r:
+                    print("R", r_, f_)
+                    print(np.array(board[r_, range(min(f_, f)+1, max(f_, f)), :]).sum(axis=1))
+                    if not np.array(board[r_, range(min(f_, f)+1, max(f_, f)), :]).sum(axis=1).any():
+                        print("B", board[r_, f_, d])
+                        board[r_, f_, d] = 0
+                        print("A", board[r_, f_, d])
+                        break
+                else:
+                    print("F", r_, f_)
+                    print(np.array(board[range(min(r_, r)+1, max(r_, r)), f_, :]).sum(axis=0))
+                    if not np.array(board[range(min(r_, r)+1, max(r_, r)), f_, :]).sum(axis=0).any():
+                        board[r_, f_, d] = 0
+                        break
+        
+        else:
+            try:
+                a = int(ambig)-1
+                board[:, a, d] = np.multiply(board[:, a, d],
+                                             np.array([board[:, a, d] != player]))
+            
+            except ValueError:
+                a = f_dict[ambig]
+                board[a, :, d] = np.multiply(board[a, :, d],
+                                             np.array([board[a, :, d] != player]))
+        
+    board[r, f, :] = 0
     board[r, f, d] = player
 
     
@@ -225,6 +251,7 @@ def move_N(to, player, board):
             board[a, :, d] = np.multiply(board[a, :, d],
                                          np.array([board[a, :, d] != player]))
     
+    board[r, f, :] = 0 
     board[r, f, d] = player
         
     
@@ -244,12 +271,13 @@ def move_B(to, player, board):
             r_, f_ = square
             if board[r_, f_, 3] == player:
                 board[r_, f_, 3] = 0
-        
+    
+    board[r, f, :] = 0     
     board[r, f, d] = player
     
     
     
-def move_P(to, player):
+def move_P(to, player, board):
     r, f, d, ambig = to
     
     if ambig is not None:
@@ -261,16 +289,17 @@ def move_P(to, player):
         
     else:
         board[r+2*player, f, d] = 0
-        
+    
+    board[r, f, :] = 0
     board[r, f, d] = player
     
     
     
 ### Gameplay
 
-def play_game(gamestring):
+def play_game(gamestring, board):
     parsed = parse_game(gamestring)
-    
+    print(parsed)
     board = init_board()
     player = 1
     
@@ -281,10 +310,10 @@ def play_game(gamestring):
         to = parse_move(move)
         d = str(to[2])
         
-        move_dict[d](to, player)
+        move_dict[d](to, player, board)
         player = -player
-
-    
+        print(board[:, :, 1])
+    return board
     
     
     

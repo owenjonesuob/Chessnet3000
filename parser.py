@@ -59,18 +59,22 @@ def parse_move(move):
     if move[0].isupper():
         d = piece_dict[move[0]]
         move = move[1:]
+        
+        ex = re.compile("x")
+        move = ex.sub("", move)
+        
+    # Check for ambiguity in move
+        if len(move) == 3:
+            ambig = move[0]
+            move = move[1:]
+        elif len(move) > 3:
+            return -1        
+            
     else:
         d = 0
         if "x" in move:
             ambig = move[0]
             move = move[2:]
-    
-    # Check for ambiguity in move
-    if len(move) == 3:
-        ambig = move[0]
-        move = move[1:]
-    elif len(move) > 3:
-        return -1
     
     r, f = 8-int(move[1]), f_dict[move[0]]
     
@@ -140,7 +144,7 @@ def find_diags(to):
     
     
     
-def move_simple(to, player):
+def move_simple(to, player, board = board):
     """
     Wipes old position and adds new position of the single piece in a layer
     """
@@ -151,24 +155,24 @@ def move_simple(to, player):
     
     
     
-def move_KQ(to, player):
-    move_simple(to, player=player)
+def move_KQ(to, player, board):
+    move_simple(to, player, board)
     
 
     
-def move_R(to, player):
+def move_R(to, player, board):
     r, f, d, ambig = to
     
     # If there's only one piece of that type
     if np.array([board[:, :, d] == player]).sum() == 1:
         return move_simple(to, player)
     
-    # Check to see if it's the only piece of its type on the rank
+    # Check to see if it's the only piece of its type on the file
     elif np.array([board[:, f, d] == player]).sum() == 1:
         board[:, f, d] = np.multiply(board[:, f, d],
                                      np.array([board[:, f, d] != player]))
     
-    # Check to see if it's the only piece of its type on the file    
+    # Check to see if it's the only piece of its type on the rank    
     elif np.array([board[r, :, d] == player]).sum() == 1:
         board[r, :, d] = np.multiply(board[r, :, d],
                                      np.array([board[r, :, d] != player]))
@@ -181,7 +185,7 @@ def move_R(to, player):
                                          np.array([board[:, a, d] != player]))
             
         except ValueError:
-            a = rank_dict[ambig]
+            a = f_dict[ambig]
             board[a, :, d] = np.multiply(board[a, :, d],
                                          np.array([board[a, :, d] != player]))
         
@@ -189,12 +193,12 @@ def move_R(to, player):
 
     
     
-def move_N(to, player):
+def move_N(to, player, board):
     r, f, d, ambig = to
     
     # If there's only one piece of that type
     if np.array([board[:, :, d] == player]).sum() == 1:
-        return move_simple(to, player)
+        return move_simple(to, player, board)
     
     # Check to see if it's the only one in potential origin squares
     origins = [[2, 1], [2, -1], [1, 2], [1, -2],
@@ -202,13 +206,7 @@ def move_N(to, player):
     
     count = 0
     
-    for og in origins:
-        r_, f_ = np.add([r, f], og)
-        if 0 <= r_ <= 7 and 0 <= f_ <= 7:
-            if board[r_, f_, d] == player:
-                count += 1
-                
-    if count == 1:
+    if ambig is None:
         for og in origins:
             r_, f_ = np.add([r, f], og)
             if 0 <= r_ <= 7 and 0 <= f_ <= 7:
@@ -223,7 +221,7 @@ def move_N(to, player):
                                          np.array([board[:, a, d] != player]))
             
         except ValueError:
-            a = rank_dict[ambig]
+            a = f_dict[ambig]
             board[a, :, d] = np.multiply(board[a, :, d],
                                          np.array([board[a, :, d] != player]))
     
@@ -232,12 +230,12 @@ def move_N(to, player):
     
 
     
-def move_B(to, player):
+def move_B(to, player, board):
     r, f, d, ambig = to
    
     # If there's only one piece of that type
     if np.array([board[:, :, d] == player]).sum() == 1:
-        return move_simple(to, player)
+        return move_simple(to, player, board)
     
     # Only one bishop on each square colour; so just wipe both diagonals        
     else:
@@ -268,7 +266,24 @@ def move_P(to, player):
     
     
     
+### Gameplay
+
+def play_game(gamestring):
+    parsed = parse_game(gamestring)
     
+    board = init_board()
+    player = 1
+    
+    move_dict = {"0": move_P, "1": move_R, "2": move_N, "3": move_B,
+                 "4": move_KQ, "5": move_KQ}
+    
+    for move in parsed["moves"]:
+        to = parse_move(move)
+        d = str(to[2])
+        
+        move_dict[d](to, player)
+        player = -player
+
     
     
     

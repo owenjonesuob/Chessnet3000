@@ -9,7 +9,7 @@ db = open("../pgn_databases/test.pgn", "r")
 
 print(db.read(10000).split("\n\n")[1::2])
 
-rank_dict = {"a": 7, "b": 6, "c": 5, "d": 4, "e": 3, "f": 2, "g": 1, "h": 0}
+f_dict = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
 
 ### Board-related
 
@@ -45,11 +45,12 @@ def unroll(board):
 
 def parse_move(move):
     
-    # Remove capture/check notation (x/+)
-    pattern = re.compile("[\Wx]+") 
+    # Remove check notation (+)
+    pattern = re.compile("\+") 
     move = pattern.sub("", move)    
     
     piece_dict = {"R": 1, "N": 2, "B": 3, "Q": 4, "K": 5}
+    ambig = None
     
     # Identify piece type
     if move[0].isupper():
@@ -57,17 +58,18 @@ def parse_move(move):
         move = move[1:]
     else:
         d = 0
-        
+        if "x" in move:
+            ambig = move[0]
+            move = move[2:]
+    
     # Check for ambiguity in move
     if len(move) == 3:
         ambig = move[0]
         move = move[1:]
     elif len(move) > 3:
         return -1
-    else:
-        ambig = None
     
-    r, f = rank_dict[move[0]], int(move[1])-1
+    r, f = 8-int(move[1]), f_dict[move[0]]
     
     return [r, f, d, ambig]
 
@@ -220,4 +222,24 @@ def move_B(to, player):
     
     
 def move_P(to, player):
-    pass
+    r, f, d, ambig = to
+    
+    if ambig is not None:
+        a = f_dict[ambig]
+        board[r+player, a, d] = 0
+
+    elif board[r+player, f, d] == player:
+        board[r+player, f, d] = 0
+        
+    else:
+        board[r+2*player, f, d] = 0
+        
+    board[r, f, d] = player
+    
+    
+    
+    
+    
+    
+    
+    

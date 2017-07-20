@@ -3,7 +3,7 @@ import numpy as np
 
 
 
-### Data-related
+### Data
 
 db = open("../pgn_databases/test.pgn", "r")
 
@@ -11,7 +11,7 @@ print(db.read(10000).split("\n\n")[1::2])
 
 f_dict = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
 
-### Board-related
+### Board
 
 def init_board():
     board = np.zeros((8, 8, 6), dtype=np.int8)
@@ -41,7 +41,10 @@ def unroll(board):
 
     
     
-### Move-related
+### Notation parsing
+
+f_dict = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
+
 
 def parse_move(move):
     
@@ -74,6 +77,33 @@ def parse_move(move):
     return [r, f, d, ambig]
 
     
+    
+def parse_game(gamestring):
+    
+    # Remove linebreaks
+    linebreak = re.compile("\\n|\s\\n")
+    gamestring = linebreak.sub(" ", gamestring)
+    
+    # Remove move numbers
+    pattern = re.compile("\d+\.\s?(\\n)?")
+    gamestring = pattern.sub("", gamestring)
+    
+    separated = gamestring.split(" ")
+    
+    # Assume white wins
+    result = 1
+    # Overwrite if black wins
+    if separated[-1][2] == 1:
+        result =-1
+    # Overwrite if it's a draw
+    elif len(separated[-1]) != 3:
+        result = 0
+    
+    return {"moves": separated[:-1], "result": result}
+    
+
+    
+### Moving
     
 def find_diags(to):
     """ Finds squares on both diagonals that target square lies on """

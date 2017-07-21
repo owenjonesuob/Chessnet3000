@@ -47,7 +47,12 @@ f_dict = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
 
 
 def parse_move(move):
-    
+
+    # Castling?
+    if move[0] == "O":
+        side = len(move)-5
+        return [side, None, 9, None]
+        
     # Remove check notation (+)
     pattern = re.compile("\+") 
     move = pattern.sub("", move)    
@@ -290,17 +295,35 @@ def move_P(to, player, board):
     board[r, f, d] = player
     
     
+
+def castling(to, player, board):
+
+    side = to[0]
+    r = int(3.5 - player*3.5)
+    board[r, 4, 5] = 0
+    
+    if side == 0:
+        board[r, 2, 5] = 1
+        board[r, 0, 1] = 0
+        board[r, 3, 1] = 1
+
+    else:
+        board[r, 6, 5] = 1
+        board[r, 7, 1] = 0
+        board[r, 5, 1] = 1
+
     
 ### Gameplay
 
 def play_game(gamestring, board):
+
     parsed = parse_game(gamestring)
-    print(parsed)
+    
     board = init_board()
     player = 1
     
     move_dict = {"0": move_P, "1": move_R, "2": move_N, "3": move_B,
-                 "4": move_KQ, "5": move_KQ}
+                 "4": move_KQ, "5": move_KQ, "9": castling}
     
     for move in parsed["moves"]:
         to = parse_move(move)
@@ -308,8 +331,5 @@ def play_game(gamestring, board):
         
         move_dict[d](to, player, board)
         player = -player
-        print(board[:, :, 1])
+        
     return board
-    
-    
-    

@@ -179,39 +179,35 @@ def move_R(to, player, board):
         board[r, :, d] = np.multiply(board[r, :, d],
                                      np.array([board[r, :, d] != player]))
                                      
-    # Use the disambiguator            
+           
+    elif ambig is None:
+        # There must be a piece "blocking"
+
+        print("AH!")
+        locations = np.where(board[:, :, d] == player)
+        for i in range(0, 2):
+            r_, f_ = locations[i][1], locations[i][0]
+            
+            if r_ == r:
+                if not np.array(board[r_, range(min(f_, f)+1, max(f_, f)), :]).sum(axis=1).any():
+                    board[r_, f_, d] = 0
+                    break
+                        
+            elif f_ == f:
+                if not np.array(board[range(min(r_, r)+1, max(r_, r)), f_, :]).sum(axis=0).any():
+                    board[r_, f_, d] = 0
+                    break
+        
+        # Use the disambiguator  
     else:
-        
-        if ambig is None:
-            print("AH!")
-            locations = np.where(board[:, :, d] == player)
-            for i in range(0, 2):
-                r_, f_ = locations[i][0], locations[i][1]
-                
-                if r_ == r:
-                    print("R", r_, f_)
-                    print(np.array(board[r_, range(min(f_, f)+1, max(f_, f)), :]).sum(axis=1))
-                    if not np.array(board[r_, range(min(f_, f)+1, max(f_, f)), :]).sum(axis=1).any():
-                        print("B", board[r_, f_, d])
-                        board[r_, f_, d] = 0
-                        print("A", board[r_, f_, d])
-                        break
-                else:
-                    print("F", r_, f_)
-                    print(np.array(board[range(min(r_, r)+1, max(r_, r)), f_, :]).sum(axis=0))
-                    if not np.array(board[range(min(r_, r)+1, max(r_, r)), f_, :]).sum(axis=0).any():
-                        board[r_, f_, d] = 0
-                        break
-        
-        else:
-            try:
-                a = int(ambig)-1
-                board[:, a, d] = np.multiply(board[:, a, d],
+        try:
+            a = int(ambig)-1
+            board[:, a, d] = np.multiply(board[:, a, d],
                                              np.array([board[:, a, d] != player]))
             
-            except ValueError:
-                a = f_dict[ambig]
-                board[a, :, d] = np.multiply(board[a, :, d],
+        except ValueError:
+            a = f_dict[ambig]
+            board[a, :, d] = np.multiply(board[a, :, d],
                                              np.array([board[a, :, d] != player]))
         
     board[r, f, :] = 0

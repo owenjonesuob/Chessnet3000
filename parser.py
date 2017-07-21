@@ -187,11 +187,9 @@ def move_R(to, player, board):
            
     elif ambig is None:
         # There must be a piece "blocking"
-
-        print("AH!")
         locations = np.where(board[:, :, d] == player)
         for i in range(0, 2):
-            r_, f_ = locations[i][1], locations[i][0]
+            r_, f_ = locations[0][i], locations[1][i]
             
             if r_ == r:
                 if not np.array(board[r_, range(min(f_, f)+1, max(f_, f)), :]).sum(axis=1).any():
@@ -206,14 +204,14 @@ def move_R(to, player, board):
         # Use the disambiguator  
     else:
         try:
-            a = int(ambig)-1
-            board[:, a, d] = np.multiply(board[:, a, d],
-                                             np.array([board[:, a, d] != player]))
+            a = 8-int(ambig)
+            board[a, :, d] = np.multiply(board[a, :, d],
+                                             np.array([board[a, :, d] != player]))
             
         except ValueError:
             a = f_dict[ambig]
-            board[a, :, d] = np.multiply(board[a, :, d],
-                                             np.array([board[a, :, d] != player]))
+            board[:, a, d] = np.multiply(board[:, a, d],
+                                             np.array([board[:, a, d] != player]))
         
     board[r, f, :] = 0
     board[r, f, d] = player
@@ -243,14 +241,14 @@ def move_N(to, player, board):
     # Use the disambiguator            
     else:
         try:
-            a = int(ambig)-1
-            board[:, a, d] = np.multiply(board[:, a, d],
-                                         np.array([board[:, a, d] != player]))
+            a = 8-int(ambig)
+            board[a, :, d] = np.multiply(board[a, :, d],
+                                             np.array([board[a, :, d] != player]))
             
         except ValueError:
             a = f_dict[ambig]
-            board[a, :, d] = np.multiply(board[a, :, d],
-                                         np.array([board[a, :, d] != player]))
+            board[:, a, d] = np.multiply(board[:, a, d],
+                                             np.array([board[:, a, d] != player]))
     
     board[r, f, :] = 0 
     board[r, f, d] = player
@@ -299,18 +297,18 @@ def move_P(to, player, board):
 def castling(to, player, board):
 
     side = to[0]
-    r = int(3.5 - player*3.5)
-    board[r, 4, 5] = 0
+    r_ = int(3.5 + player*3.5)
+    board[r_, 4, 5] = 0
     
     if side == 0:
-        board[r, 2, 5] = 1
-        board[r, 0, 1] = 0
-        board[r, 3, 1] = 1
+        board[r_, 2, 5] = player
+        board[r_, 0, 1] = 0
+        board[r_, 3, 1] = player
 
     else:
-        board[r, 6, 5] = 1
-        board[r, 7, 1] = 0
-        board[r, 5, 1] = 1
+        board[r_, 6, 5] = player
+        board[r_, 7, 1] = 0
+        board[r_, 5, 1] = player
 
     
 ### Gameplay
@@ -331,5 +329,5 @@ def play_game(gamestring, board):
         
         move_dict[d](to, player, board)
         player = -player
-        
+        print(board[:, :, int(d)%7])
     return board
